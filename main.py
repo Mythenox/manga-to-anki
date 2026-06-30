@@ -3,3 +3,12 @@
 Add option to ask for user confirmation, where declined words will be remembered
 and ignored in the future. If supplied with a parent deck, words present in the parent
 deck will be ignored to avoid redundancy."""
+
+import cv2
+
+def main():
+    file_path = "sample/yfnu7-7.png"
+    
+
+if __name__ == "__main__":
+    main()

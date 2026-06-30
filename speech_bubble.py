@@ -1,4 +1,4 @@
-import cv2, pytesseract
+import cv2
 from cv2.typing import MatLike
 from matplotlib import pyplot as plt
 
@@ -7,7 +7,7 @@ def main():
     file_path = "sample/yfnu7-7.png" 
     image = cv2.imread(file_path)
     if image is not None:
-        drawn_image, cropped_images = find_bubbles(image)
+        drawn_image, cropped_images = find_bubbles_and_mark(image)
         for i in range(len(cropped_images)):
             no_ext_path, file_ext = file_path.split(".", maxsplit=1)
             output_file_name = no_ext_path + f"({i})." + file_ext
@@ -57,6 +57,31 @@ def preprocess(image: MatLike, simple_method: bool = True) -> MatLike:
 def find_bubbles(
         image: MatLike,
         simple_method: bool = True,
+) -> list[MatLike]:
+    """Returns list of cropped sub-images of areas where text is found."""
+    prepped_image = preprocess(image, simple_method)
+    # find contours
+    contours = cv2.findContours(
+        prepped_image,
+        cv2.RETR_TREE,
+        cv2.CHAIN_APPROX_SIMPLE,
+    )[0]
+    cropped_images: list[MatLike] = []
+    cropped_image_dims: list[tuple[int, int, int, int]] = []
+
+    for contour in contours:
+        (x, y, w, h) = cv2.boundingRect(contour)
+
+        # filter out speech bubbles with unreasonable size
+        if (60 < w < 400) and (25 < h < 500):
+            cropped_images.append(image[y:y+h, x:x+w])
+            cropped_image_dims.append((x, y, x+w, y+h))
+    return cropped_images
+
+
+def find_bubbles_and_mark(
+        image: MatLike,
+        simple_method: bool = True,
 ) -> tuple[MatLike, list[MatLike]]:
     """Returns list of cropped sub-images of areas where text is found,
     along with the original image with the crop boundaries drawn on them."""
@@ -102,6 +127,7 @@ def resize_rectangles(
     """Shrink rectangles until they no longer overlap each other's areas.
        Since binarization is applied, maybe just shrink until the edges no longer
        intersect black pixels?"""
+    # compute farthest speech bubble border,
     pass
 
 

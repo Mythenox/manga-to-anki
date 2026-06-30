@@ -3,8 +3,9 @@
 !.pixi/config.toml
 
 # other
-/images
-/sample
-speech_bubble_old.py
-tesseract/
-tessdata_downloader/
+images/
+sample/
+target/
+
+# generated files
+__pycache__/
