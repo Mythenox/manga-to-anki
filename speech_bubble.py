@@ -136,17 +136,7 @@ def plot(image: MatLike) -> None:
     plt.imshow(image)
     plt.axis("off")
     plt.show()
-
-"""
-extracted_text: str = pytesseract.image_to_string(image_rgb, lang="jpn")
-data: dict[str, list[int]] = pytesseract.image_to_data(image_rgb, output_type=pytesseract.Output.DICT)
-n_boxes: int = len(data['level'])
-for i in range(n_boxes):
-    (x, y, w, h) = (data['left'][i], data['top'][i], data['width'][i], data['height'][i])
-    cv2.rectangle(image_rgb, (x, y), (x + w, y + h), (255, 0, 0), 2)
-print(data)
-print(extracted_text)"""
-
+    
 
 if __name__ == "__main__":
     main()
