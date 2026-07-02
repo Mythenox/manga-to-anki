@@ -28,6 +28,7 @@ class PyToken:
         self.l3_part: str = str(j_token.getPartOfSpeechLevel3()) # pyright: ignore[reportAttributeAccessIssue]
         self.l4_part: str = str(j_token.getPartOfSpeechLevel4()) # pyright: ignore[reportAttributeAccessIssue]
         self.base_form: str = str(j_token.getBaseForm()) # pyright: ignore[reportAttributeAccessIssue]
+        self.reading: str = str(j_token.getReading()) # pyright: ignore[reportAttributeAccessIssue]
         self.jlpt_class: int # web scraper to get this from jisho.org?
     
     def get_surface_form(self):
@@ -47,6 +48,9 @@ class PyToken:
 
     def get_base_form(self):
         return self.base_form
+    
+    def get_reading(self):
+        return self.reading
 
     def is_kango(self) -> bool:
         return True

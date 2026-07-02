@@ -4,6 +4,8 @@ Add option to ask for user confirmation, where declined words will be remembered
 and ignored in the future. If supplied with a parent deck, words present in the parent
 deck will be ignored to avoid redundancy."""
 
+#TODO: use coroutines?
+
 import cv2
 
 def main():
