@@ -9,16 +9,9 @@ from speech_bubble import find_bubbles, preprocess
 
 
 def main():
-    image1 = Image.open("sample/yfnu7-7(4).png")
-    image2 = Image.open("sample/yfnu7-7(5).png")
-    image3 = Image.open("sample/yfnu7-7(6).png")
-    image4 = Image.open("sample/yfnu7-7(7).png")
-    image5 = Image.open("sample/yfnu7-7(8).png")
-    image6 = Image.open("sample/yfnu7-7(9).png")
-    image7 = Image.open("sample/yfnu7-7(10).png")
-    image8 = Image.open("sample/yfnu7-7(11).png")
-    if image1 is not None:
-        print(get_bubble_text([image1, image2, image3, image4, image5, image6, image7, image8]))
+    images = [f"sample/yfnu7-7({i}).png" for i in range(13)]
+    text_list = get_bubble_text(images)
+    print(len(text_list))
     
 
 def resize_crops(cropped_images: list[MatLike], scale_factor: int = 2) -> list[MatLike]:

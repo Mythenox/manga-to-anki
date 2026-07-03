@@ -1,8 +1,10 @@
-# Wrapper classes because Java is scary
+# Wrapper class because Java is scary
 # TODO: add support for slang terms? (words like ムズい aren't properly parsed)
+# TODO: use parts of speech to add appropriate tags for anki (na-adjective, i-adjective, etc)
 
 from typing import Any
 import jpype, jpype.imports
+from process_page import get_bubble_text
 
 kuromoji_jar = "./target/dependency/kuromoji-core-0.9.0.jar"
 ipadic_jar = "./target/dependency/kuromoji-ipadic-0.9.0.jar"
@@ -12,15 +14,27 @@ JToken = jpype.JClass('com.atilika.kuromoji.ipadic.Token')
 
 
 def main():
-    tokens = tokenize_text("飯を作った")
-    token_1 = tokens[2]
-    print(token_1.get_base_form())
+    """images = [f"sample/yfnu7-7({i}).png" for i in range(13)]
+    text_list: list[str] = get_bubble_text(images)
+    tokens = []
+    for dialogue in text_list:
+        dialogue_tokens = tokenize_text(dialogue)
+        tokens.extend(dialogue_tokens)
+    print(tokens)
+    print(len(tokens))"""
+
+    a = tokenize_text("映画")
+    k = a[0]
+    print(k.get_base_form())
+    """k = tokenize_text(k.get_base_form())[0]
+    print(k.get_reading())"""
     
 
 class PyToken:
     def __init__(
             self,
-            j_token: object
+            j_token: object,
+            excerpt: str # text from which this token came
     ) -> None:
         self.surface: str = str(j_token.getSurface()) # pyright: ignore[reportAttributeAccessIssue]
         self.l1_part: str = str(j_token.getPartOfSpeechLevel1()) # pyright: ignore[reportAttributeAccessIssue]
@@ -29,7 +43,8 @@ class PyToken:
         self.l4_part: str = str(j_token.getPartOfSpeechLevel4()) # pyright: ignore[reportAttributeAccessIssue]
         self.base_form: str = str(j_token.getBaseForm()) # pyright: ignore[reportAttributeAccessIssue]
         self.reading: str = str(j_token.getReading()) # pyright: ignore[reportAttributeAccessIssue]
-        self.jlpt_class: int # web scraper to get this from jisho.org?
+        self.pronunciation: str = str(j_token.getPronunciation()) # pyright: ignore[reportAttributeAccessIssue]
+        self.excerpt: str = excerpt
     
     def get_surface_form(self):
         return self.surface
@@ -51,9 +66,9 @@ class PyToken:
     
     def get_reading(self):
         return self.reading
-
-    def is_kango(self) -> bool:
-        return True
+    
+    def get_pronunciation(self):
+        return self.pronunciation
     
     def is_vocab(self) -> bool:
         """Returns true for nouns
@@ -75,19 +90,24 @@ class PyToken:
         return (
             "{surface=" + f"{self.surface}, "
             + f"l1_part={self.l1_part}, "
-            + f"base_form={self.base_form}" + "}"
+            + f"base_form={self.base_form}"
+            + f'excerpt="{self.excerpt}'+ "}"
         )
 
 
-def tokenize_text(text: str) -> list[PyToken]:
+def tokenize_text(excerpt: str) -> list[PyToken]:
     tokenizer = JTokenizer()
-    j_tokens = tokenizer.tokenize(text)
+    j_tokens = tokenizer.tokenize(excerpt)
     py_tokens: list[PyToken] = []
     for j_token in j_tokens:
-        token = PyToken(j_token)
+        token = PyToken(j_token, excerpt)
         py_tokens.append(token)
     return py_tokens
     
+def fix_tokens(tokens: list[PyToken]):
+    for token in tokens:
+        if token.get_base_form != token.get_reading():
+            pass
 
 if __name__ == "__main__":
     main()
