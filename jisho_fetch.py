@@ -69,12 +69,5 @@ def get_kanji_english_meaning(html: str | None) -> str | None:
     return None
 
 
-def get_kango_furigana(html: str | None) -> str | None:
-    if html is None:
-        return None
-    soup = BeautifulSoup(html, 'html.parser')
-    result = soup.find("rb")
-
-
 if __name__ == "__main__":
     main()

@@ -5,6 +5,7 @@
 from typing import Any
 import jpype, jpype.imports
 from process_page import get_bubble_text
+from kana import KATAKANA_TO_HIRAGANA, KATAKANA
 
 kuromoji_jar = "./target/dependency/kuromoji-core-0.9.0.jar"
 ipadic_jar = "./target/dependency/kuromoji-ipadic-0.9.0.jar"
@@ -23,9 +24,8 @@ def main():
     print(tokens)
     print(len(tokens))"""
 
-    a = tokenize_text("映画")
-    k = a[0]
-    print(k.get_base_form())
+    a = tokenize_text("ケーキを作ったけど温度が低かった")
+    print(a)
     """k = tokenize_text(k.get_base_form())[0]
     print(k.get_reading())"""
     
@@ -64,11 +64,14 @@ class PyToken:
     def get_base_form(self):
         return self.base_form
     
-    def get_reading(self):
+    def get_reading(self) -> str:
         return self.reading
     
     def get_pronunciation(self):
         return self.pronunciation
+    
+    def get_excerpt(self):
+        return self.excerpt
     
     def is_vocab(self) -> bool:
         """Returns true for nouns
@@ -85,6 +88,15 @@ class PyToken:
                 self.get_l1_part() == "動詞" or
                 self.get_l1_part() == "副詞"
             )
+        
+    def get_part_of_speech(self) -> str:
+        if self.get_l1_part() == "名詞":
+            if self.get_l2_part() == "形容動詞語幹":
+                return "na-adjective"
+            return "noun"
+        elif self.get_l1_part() == "動詞":
+            return "verb"
+        return "i-adjective"
     
     def __repr__(self) -> str:
         return (
@@ -102,12 +114,23 @@ def tokenize_text(excerpt: str) -> list[PyToken]:
     for j_token in j_tokens:
         token = PyToken(j_token, excerpt)
         py_tokens.append(token)
-    return py_tokens
+    return deinflect_tokens(py_tokens)
+
+def retokenize(word: str, excerpt: str) -> PyToken:
+    tokenizer = JTokenizer()
+    j_tokens = list(tokenizer.tokenize(word))
+    if len(j_tokens) > 1:
+        raise Exception("too many elements")
+    j_token = j_tokens[0]
+    return PyToken(j_token, excerpt)
     
-def fix_tokens(tokens: list[PyToken]):
-    for token in tokens:
-        if token.get_base_form != token.get_reading():
-            pass
+def deinflect_tokens(tokens: list[PyToken]) -> list[PyToken]:
+    return [
+        retokenize(token.get_base_form(), token.get_excerpt())
+        if token.get_base_form() != token.get_surface_form()
+        else token
+        for token in tokens
+    ]
 
 if __name__ == "__main__":
     main()
