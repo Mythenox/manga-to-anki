@@ -46,55 +46,28 @@ class PyToken:
         self.pronunciation: str = str(j_token.getPronunciation()) # pyright: ignore[reportAttributeAccessIssue]
         self.excerpt: str = excerpt
     
-    def get_surface_form(self):
-        return self.surface
-
-    def get_l1_part(self):
-        return self.l1_part
-    
-    def get_l2_part(self):
-        return self.l2_part
-    
-    def get_l3_part(self):
-        return self.l3_part
-    
-    def get_l4_part(self):
-        return self.l4_part
-
-    def get_base_form(self):
-        return self.base_form
-    
-    def get_reading(self) -> str:
-        return self.reading
-    
-    def get_pronunciation(self):
-        return self.pronunciation
-    
-    def get_excerpt(self):
-        return self.excerpt
-    
     def is_vocab(self) -> bool:
         """Returns true for nouns
         (exluding names of places (except countries) and people),
         adjectives and verbs."""
-        if self.get_l1_part() == "名詞":
+        if self.l1_part == "名詞":
             # return false if name of location (except for countries)
-            if self.get_l3_part() == "地域":
-                return self.get_l4_part() == "国"
+            if self.l3_part == "地域":
+                return self.l4_part == "国"
             # otherwise, return false if name of a person, true for every other noun
-            return self.get_l3_part() != "人名"
+            return self.l3_part != "人名"
         else:
             return (
-                self.get_l1_part() == "動詞" or
-                self.get_l1_part() == "副詞"
+                self.l1_part == "動詞" or
+                self.l1_part == "副詞"
             )
         
     def get_part_of_speech(self) -> str:
-        if self.get_l1_part() == "名詞":
-            if self.get_l2_part() == "形容動詞語幹":
+        if self.l1_part == "名詞":
+            if self.l2_part == "形容動詞語幹":
                 return "na-adjective"
             return "noun"
-        elif self.get_l1_part() == "動詞":
+        elif self.l1_part == "動詞":
             return "verb"
         return "i-adjective"
     
@@ -126,8 +99,8 @@ def retokenize(word: str, excerpt: str) -> PyToken:
     
 def deinflect_tokens(tokens: list[PyToken]) -> list[PyToken]:
     return [
-        retokenize(token.get_base_form(), token.get_excerpt())
-        if token.get_base_form() != token.get_surface_form()
+        retokenize(token.base_form, token.excerpt)
+        if token.base_form != token.surface
         else token
         for token in tokens
     ]

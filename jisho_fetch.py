@@ -6,8 +6,10 @@ import requests
 
 def main():
     html = get_html("https://jisho.org/search/付%23kanji")
-    meaning = get_kanji_english_meaning(html)
-    print(meaning)
+    if html is not None:
+        meaning = get_kanji_english_meaning(html)
+        print(meaning)
+    raise Exception("no matches")
 
 
 def get_html(url: str) -> str | None:
@@ -22,8 +24,6 @@ def get_html(url: str) -> str | None:
 
 
 def get_tango_jlpt_rating(html: str) -> int | None:
-    if html is None:
-        return None
     soup = BeautifulSoup(html, 'html.parser')
     result = soup.find("span", class_="concept_light-tag label")
     if isinstance(result, Tag):
@@ -33,8 +33,6 @@ def get_tango_jlpt_rating(html: str) -> int | None:
 
 
 def get_kanji_jlpt_rating(html: str) -> int | None:
-    if html is None:
-        return None
     soup = BeautifulSoup(html, 'html.parser')
     parent_div = soup.find("div", class_="jlpt")
     if isinstance(parent_div, Tag):
@@ -46,10 +44,8 @@ def get_kanji_jlpt_rating(html: str) -> int | None:
     return None
 
 
-def get_tango_english_meaning(html: str | None) -> str | None:
+def get_tango_english_meaning(html: str) -> str | None:
     # some words have a million different definitions on jisho.org, so I'm gonna compromise and just grab the first one
-    if html is None:
-        return None
     soup = BeautifulSoup(html, 'html.parser')
     result = soup.find("span", class_="meaning-meaning")
     if isinstance(result, Tag):
@@ -58,15 +54,18 @@ def get_tango_english_meaning(html: str | None) -> str | None:
     return None
     
     
-def get_kanji_english_meaning(html: str | None) -> str | None:
-    if html is None:
-        return None
+def get_kanji_english_meaning(html: str) -> str | None:
     soup = BeautifulSoup(html, 'html.parser')
     result = soup.find("div", class_="kanji-details__main-meanings")
     if isinstance(result, Tag):
         meaning = result.text.strip()
         return meaning
     return None
+
+def get_kanji_reading(html: str) -> str | None:
+    """return dictionary (keys: kunyomi, onyomi) of lists of possible readings"""
+    soup = BeautifulSoup(html, 'html.parser')
+    # result = 
 
 
 if __name__ == "__main__":

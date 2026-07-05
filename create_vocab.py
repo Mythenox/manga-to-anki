@@ -1,6 +1,8 @@
+from functools import cached_property
 from jisho_fetch import *
 from pytoken import *
 from kana import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA
+from infer import infer_reading
 
 # filter out vocab with jlpt_rating < jlpt_filter if "n{i}" passed from command line, where i in {1,2,3,4}
 
@@ -13,67 +15,63 @@ class Tango:
             part_of_speech: str
     ) -> None:
         self.word = word
-        self.jisho_html: str | None = self.init_jisho_html()
-        self.eng_meaning: str | None = self.init_eng_meaning()
-        self.jlpt_rating: int | None = self.init_jlpt_rating()
         self.reading = reading
         self.excerpt = excerpt
         self.part_of_speech = part_of_speech
 
-    def init_jisho_html(self) -> str | None:
+    @cached_property
+    def jisho_html(self) -> str | None:
         html = get_html(f"https://jisho.org/word/{self.word}")
         return html 
 
-    def init_eng_meaning(self):
+    @cached_property
+    def eng_meaning(self):
         if self.jisho_html is None:
             return None
         return get_tango_english_meaning(self.jisho_html)
     
-    def init_jlpt_rating(self):
+    @cached_property
+    def jlpt_rating(self):
         if self.jisho_html is None:
             return None
         return get_tango_jlpt_rating(self.jisho_html)
-    
-    def get_word(self):
-        return self.word
-    
-    def get_eng_meaning(self):
-        return self.eng_meaning
-    
-    def get_jlpt_rating(self):
-        return self.jlpt_rating
-    
-    def get_reading(self):
-        return self.reading
     
     
 class Kanji:
     def __init__(
             self,
             character: str,
+            context: str,
             excerpt: str,
-            part_of_speech: str
+            position: int
     ) -> None:
         self.character: str = character
-        self.jisho_html: str | None = self.get_jisho_html()
-        self.eng_meaning: str | None = self.get_eng_meaning()
-        self.reading: str | None = self.get_reading()
-        self.jlpt_rating: int | None = self.get_jlpt_rating()
+        self.context = context
         self.excerpt = excerpt
-        self.part_of_speech = part_of_speech
+        self.position = position
 
-    def get_jisho_html(self) -> str | None:
+    @cached_property
+    def jisho_html(self) -> str | None:
         html = get_html(f"https://jisho.org/search/{self.character}%23kanji")
-        return html
+        return html 
 
-    def get_reading(self):
-        pass
+    @cached_property
+    def eng_meaning(self):
+        if self.jisho_html is None:
+            return None
+        return get_kanji_english_meaning(self.jisho_html)
     
-    def get_eng_meaning(self):
-        raise NotImplementedError
+    @cached_property
+    def jlpt_rating(self):
+        if self.jisho_html is None:
+            return None
+        return get_kanji_jlpt_rating(self.jisho_html)
     
-    def get_jlpt_rating(self):
-        raise NotImplementedError
+    @cached_property
+    def reading(self) -> str | None:
+        if self.jisho_html is None:
+            return None
+        return get_kanji_reading(self.jisho_html)
     
 
 def create_vocab(
@@ -84,8 +82,8 @@ def create_vocab(
     # can return a single Tango, list of Kanji, empty list, or None
     if kanji_mode:
         kanji_list: list[Kanji] = [
-            Kanji(character, token.get_excerpt(), token.get_part_of_speech())
-            for character in token.get_surface_form()
+            Kanji(character, token.surface, token.excerpt)
+            for character in token.surface
             if is_kanji(character)
         ]
         if len(kanji_list) == 0:
@@ -93,12 +91,29 @@ def create_vocab(
         return kanji_list
     if token.is_vocab():
         return Tango(
-            token.get_surface_form(),
+            token.surface,
             to_hiragana(token.reading),
-            token.get_excerpt(),
+            token.excerpt,
             token.get_part_of_speech()
         )
     return None
+
+def infer_reading(
+        token_reading: str,
+        possible_readings: dict[str,list[str]],
+) -> str:
+    context: str = to_hiragana(token_reading)
+    candidates = [
+        reading for sublist in possible_readings.values()
+        for reading in sublist
+        if to_hiragana(reading) in context
+    ]
+    if len(candidates) > 1:
+        raise Exception("まずいです")
+    if len(candidates) == 0:
+        raise Exception("no possible readings found")
+    return candidates[0]
+
     
 def is_kanji(character: str) -> bool:
     return not (character in HIRAGANA or character in KATAKANA)
