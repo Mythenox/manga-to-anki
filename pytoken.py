@@ -5,7 +5,7 @@
 from typing import Any
 import jpype, jpype.imports
 from process_page import get_bubble_text
-from kana import KATAKANA_TO_HIRAGANA, KATAKANA
+from constants import KATAKANA_TO_HIRAGANA, KATAKANA, FILLER
 
 kuromoji_jar = "./target/dependency/kuromoji-core-0.9.0.jar"
 ipadic_jar = "./target/dependency/kuromoji-ipadic-0.9.0.jar"
@@ -24,8 +24,9 @@ def main():
     print(tokens)
     print(len(tokens))"""
 
-    a = tokenize_text("ケーキを作ったけど温度が低かった")
-    print(a)
+    a = tokenize_text("感じ")
+    for item in a:
+        print(item.reading)
     """k = tokenize_text(k.get_base_form())[0]
     print(k.get_reading())"""
     
@@ -61,14 +62,17 @@ class PyToken:
                 self.l1_part == "動詞" or
                 self.l1_part == "副詞"
             )
-        
-    def get_part_of_speech(self) -> str:
+    
+    @property
+    def part_of_speech(self) -> str:
         if self.l1_part == "名詞":
             if self.l2_part == "形容動詞語幹":
                 return "na-adjective"
             return "noun"
         elif self.l1_part == "動詞":
             return "verb"
+        elif self.l1_part == "副詞":
+            return "adverb"
         return "i-adjective"
     
     def __repr__(self) -> str:
@@ -78,32 +82,45 @@ class PyToken:
             + f"base_form={self.base_form}"
             + f'excerpt="{self.excerpt}'+ "}"
         )
+    
+    def __eq__(self, other) -> bool:
+        return self.surface == other.surface and self.l1_part == other.l1_part
+    
+    def __hash__(self) -> int:
+        return hash((self.surface, self.l1_part))
 
 
-def tokenize_text(excerpt: str) -> list[PyToken]:
+def tokenize_text(excerpt: str, seen_words: set[str] = set()) -> set[PyToken]:
     tokenizer = JTokenizer()
     j_tokens = tokenizer.tokenize(excerpt)
-    py_tokens: list[PyToken] = []
+    py_tokens: set[PyToken] = set()
     for j_token in j_tokens:
         token = PyToken(j_token, excerpt)
-        py_tokens.append(token)
+        if (
+            token.base_form not in seen_words and
+            token.surface not in FILLER
+        ):
+            py_tokens.add(token)
+            seen_words.add(token.base_form)
     return deinflect_tokens(py_tokens)
 
-def retokenize(word: str, excerpt: str) -> PyToken:
+def retokenize(original_token: PyToken) -> PyToken:
+    #TODO: bugged behavior with ありえる, tokenizes into ある and える
+    print(f"Retokenizing {original_token.surface}...")
     tokenizer = JTokenizer()
-    j_tokens = list(tokenizer.tokenize(word))
-    if len(j_tokens) > 1:
-        raise Exception("too many elements")
+    j_tokens = list(tokenizer.tokenize(original_token.base_form))
+    # if len(j_tokens) > 1:
+    #     raise Exception("too many elements")
     j_token = j_tokens[0]
-    return PyToken(j_token, excerpt)
+    return PyToken(j_token, original_token.excerpt)
     
-def deinflect_tokens(tokens: list[PyToken]) -> list[PyToken]:
-    return [
-        retokenize(token.base_form, token.excerpt)
+def deinflect_tokens(tokens: set[PyToken]) -> set[PyToken]:
+    return {
+        retokenize(token)
         if token.base_form != token.surface
         else token
         for token in tokens
-    ]
+    }
 
 if __name__ == "__main__":
     main()

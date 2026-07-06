@@ -1,4 +1,4 @@
-from kana import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA
+from constants import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA, VOICEABLE_HIRAGANA, VOICEABLE_KATAKANA
 
 def to_hiragana(reading: str) -> str:
     return "".join(KATAKANA_TO_HIRAGANA[ch] if ch in KATAKANA else ch for ch in reading)
@@ -12,9 +12,14 @@ def infer_reading(
         surface: str
 ) -> str:
     context: str = to_hiragana(token_reading)
-    candidates = [
+    flattened_readings = [
         reading for sublist in possible_readings.values()
         for reading in sublist
+    ]
+    mutated_readings = add_mutations(flattened_readings, index)
+    candidates = [
+        reading
+        for reading in mutated_readings
         if to_hiragana(reading) in context
     ]
     if len(candidates) == 1:
@@ -41,15 +46,45 @@ def infer_reading(
                 raise Exception("big oopsie has occurred") # hopefully this isn't even possible
             if normalized_reading in proper_substring:
                 return reading
-    return token_reading # this happens in the case of 熟字訓
+    return to_hiragana(token_reading) # this happens in the case of 熟字訓
 
 
-def apply_rendaku():
-    pass
-    
-def apply_handakuon():
-    pass
-
-def apply_sokuon():
-    pass
+def add_mutations(readings: list[str], index: int) -> list[str]:
+    mutated_readings = []
+    if index == 0:
+        # apply sokuon
+        for reading in readings:
+            mutated_readings.append(reading)
+            if (
+                reading[-1] == "つ" or 
+                reading[-1] == "ち" or
+                reading[-1] == "く"
+            ):
+                mutation = reading[:-1] + "っ"
+                mutated_readings.append(mutation)
+            elif (
+                reading[-1] == "ツ" or
+                reading[-1] == "チ" or
+                reading[-1] == "ク"
+            ):
+                mutation = reading[:-1] + "ッ"
+                mutated_readings.append(mutation)
+    else:
+        # apply rendaku
+        for reading in readings:
+            mutated_readings.append(reading)
+            if reading[0] in VOICEABLE_HIRAGANA:
+                mutation = f"{chr(ord(reading[0]) + 1)}" + reading[1:]
+                mutated_readings.append(mutation)
+                if reading[0] in {"は", "ひ", "ふ", "へ", "ほ"}:
+                    mutation = f"{chr(ord(reading[0]) + 2)}" + reading[1:]
+                    mutated_readings.append(mutation)
+            elif reading[0] in VOICEABLE_KATAKANA:
+                mutation = f"{chr(ord(reading[0]) + 1)}" + reading[1:]
+                mutated_readings.append(mutation)
+                if reading[0] in {"ハ", "ヒ", "フ", "ヘ", "ホ"}:
+                    mutation = f"{chr(ord(reading[0]) + 2)}" + reading[1:]
+                    mutated_readings.append(mutation)
+                    
+    return mutated_readings
     

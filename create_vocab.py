@@ -1,7 +1,7 @@
 from functools import cached_property
 from jisho_fetch import *
 from pytoken import *
-from kana import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA
+from constants import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA, KANJI
 from infer import infer_reading
 
 # filter out vocab with jlpt_rating < jlpt_filter if "n{i}" passed from command line, where i in {1,2,3,4}
@@ -21,7 +21,10 @@ class Tango:
 
     @cached_property
     def jisho_html(self) -> str | None:
-        html = get_html(f"https://jisho.org/word/{self.word}")
+        try:
+            html = fetch_word_html(f"https://jisho.org/search/{self.word}")
+        except Exception:
+            return None
         return html 
 
     @cached_property
@@ -36,19 +39,24 @@ class Tango:
             return None
         return get_tango_jlpt_rating(self.jisho_html)
     
+    def __repr__(self) -> str:
+        return "{" + f"word={self.word}, reading={self.reading}, type={self.part_of_speech}, JLPT N{self.jlpt_rating}" + "}"
+    
     
 class Kanji:
     def __init__(
             self,
             character: str,
-            context: str,
+            context_surface: str,
+            context_reading: str,
             excerpt: str,
-            position: int
+            index: int
     ) -> None:
         self.character: str = character
-        self.context = context
+        self.context_surface = context_surface
+        self.context_reading = context_reading
         self.excerpt = excerpt
-        self.position = position
+        self.index = index
 
     @cached_property
     def jisho_html(self) -> str | None:
@@ -71,7 +79,18 @@ class Kanji:
     def reading(self) -> str | None:
         if self.jisho_html is None:
             return None
-        return get_kanji_reading(self.jisho_html)
+        possible_readings: dict[str, list[str]] | None = get_kanji_readings(self.jisho_html)
+        if possible_readings is None:
+            return None
+        return infer_reading(
+            self.context_reading,
+            possible_readings,
+            self.index,
+            self.context_surface
+        )
+    
+    def __repr__(self) -> str:
+        return "{" + f"character={self.character}, reading={self.reading}, context={self.context_surface}, JLPT N{self.jlpt_rating}" + "}"
     
 
 def create_vocab(
@@ -82,9 +101,9 @@ def create_vocab(
     # can return a single Tango, list of Kanji, empty list, or None
     if kanji_mode:
         kanji_list: list[Kanji] = [
-            Kanji(character, token.surface, token.excerpt)
+            Kanji(character, token.surface, token.reading, token.excerpt, token.surface.index(character))
             for character in token.surface
-            if is_kanji(character)
+            if character in KANJI
         ]
         if len(kanji_list) == 0:
             return None
@@ -94,33 +113,13 @@ def create_vocab(
             token.surface,
             to_hiragana(token.reading),
             token.excerpt,
-            token.get_part_of_speech()
+            token.part_of_speech
         )
     return None
 
-def infer_reading(
-        token_reading: str,
-        possible_readings: dict[str,list[str]],
-) -> str:
-    context: str = to_hiragana(token_reading)
-    candidates = [
-        reading for sublist in possible_readings.values()
-        for reading in sublist
-        if to_hiragana(reading) in context
-    ]
-    if len(candidates) > 1:
-        raise Exception("まずいです")
-    if len(candidates) == 0:
-        raise Exception("no possible readings found")
-    return candidates[0]
-
-    
-def is_kanji(character: str) -> bool:
-    return not (character in HIRAGANA or character in KATAKANA)
-
 def is_kango(word: str) -> bool:
     for character in word:
-        if not is_kanji(character):
+        if character not in KANJI:
             return False
     return True
 
