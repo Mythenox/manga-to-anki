@@ -1,6 +1,7 @@
 from functools import cached_property
 from jisho_fetch import *
-from pytoken import *
+from sudachipy import tokenizer, dictionary
+from word import Word
 from constants import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA, KANJI
 from infer import infer_reading
 
@@ -94,14 +95,14 @@ class Kanji:
     
 
 def create_vocab(
-        token: PyToken,
+        token: Word,
         kanji_mode: bool = False,
 ) -> Tango | list[Kanji] | None:
     # run in kanji mode if "-k" passed from command line
     # can return a single Tango, list of Kanji, empty list, or None
     if kanji_mode:
         kanji_list: list[Kanji] = [
-            Kanji(character, token.surface, token.reading, token.excerpt, token.surface.index(character))
+            Kanji(character, token.surface, token.reading_form, token.excerpt, token.surface.index(character))
             for character in token.surface
             if character in KANJI
         ]
@@ -110,10 +111,10 @@ def create_vocab(
         return kanji_list
     if token.is_vocab():
         return Tango(
-            token.surface,
-            to_hiragana(token.reading),
+            token.normalized_form,
+            to_hiragana(token.reading_form),
             token.excerpt,
-            token.part_of_speech
+            token.eng_POS
         )
     return None
 

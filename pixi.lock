@@ -53,7 +53,6 @@ environments:
       - conda: https://conda.anaconda.org/conda-forge/linux-64/harfbuzz-14.2.1-ha770c72_1.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/icu-78.3-h33c6efd_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/imagecodecs-2026.6.26-py312he3a1cdd_0.conda
-      - conda: https://conda.anaconda.org/conda-forge/linux-64/jpype1-1.7.1-py312h1289d80_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/jxrlib-1.1-hd590300_3.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/keyutils-1.6.3-hb9d3cd8_0.conda
       - conda: https://conda.anaconda.org/conda-forge/linux-64/kiwisolver-1.5.0-py312h0a2e395_0.conda
@@ -257,6 +256,8 @@ environments:
       - pypi: https://files.pythonhosted.org/packages/39/5e/a3d37403ab385cf50e7e825f5bbc6bd029d63006d62c9106968e833fab40/manga_ocr-0.1.14-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/3b/da/9657d637bcacdbaf6a914ce504000da5639f9d945f8d3552a940f021d6c0/jaconv-0.5.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/3f/f9/2b3ff4e56e5fa7debfaf9eb135d0da96f3e9a1d5b27222223c7296336e5f/typer-0.25.1-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/49/14/74ee9e3b69f1bc18a1ab05b262062d10dc3d282cedbe7b3ebd6f56fb0936/sudachidict_core-20260428-py3-none-any.whl
+      - pypi: https://files.pythonhosted.org/packages/49/ee/f7c20d6e17619c83f5ffa3ed7bd1582174809fd8b396fb9250f24210dd57/sudachipy-0.6.11-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/4b/f8/d0118a2f5f23b02cd166fa385c60f9b0d4f9194f574e2b31cef350ad7223/charset_normalizer-3.4.7-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
       - pypi: https://files.pythonhosted.org/packages/4f/85/b505a99a133d9f99d21af182af416e9baef70bdeef019983479651e494c2/huggingface_hub-1.21.0-py3-none-any.whl
       - pypi: https://files.pythonhosted.org/packages/55/2b/8cf7514cb57d028abcef625afa847d60ff1ffbf0049c36b78faa7c35046f/unidic-lite-1.0.8.tar.gz
@@ -891,23 +892,6 @@ packages:
   run_exports: {}
   size: 2349412
   timestamp: 1782686079000
-- conda: https://conda.anaconda.org/conda-forge/linux-64/jpype1-1.7.1-py312h1289d80_0.conda
-  sha256: cb779aabe1cd8e2b3028bdb947a08af80ef9932b9e8c0d4bc297545574c52e60
-  md5: 03a97701957945503909d236635db758
-  depends:
-  - __glibc >=2.17,<3.0.a0
-  - libgcc >=14
-  - libstdcxx >=14
-  - packaging
-  - python >=3.12,<3.13.0a0
-  - python_abi 3.12.* *_cp312
-  license: Apache-2.0
-  license_family: APACHE
-  purls:
-  - pkg:pypi/jpype1?source=hash-mapping
-  run_exports: {}
-  size: 455001
-  timestamp: 1778141723174
 - conda: https://conda.anaconda.org/conda-forge/linux-64/jxrlib-1.1-hd590300_3.conda
   sha256: 2057ca87b313bde5b74b93b0e696f8faab69acd4cb0edebb78469f3f388040c0
   md5: 5aeabe88534ea4169d4c49998f293d6c
@@ -3935,7 +3919,7 @@ packages:
   license: BSD-3-Clause
   license_family: BSD
   purls:
-  - pkg:pypi/tifffile?source=compressed-mapping
+  - pkg:pypi/tifffile?source=hash-mapping
   run_exports: {}
   size: 210002
   timestamp: 1780298551604
@@ -4156,6 +4140,19 @@ packages:
   - rich>=13.8.0
   - annotated-doc>=0.0.2
   requires_python: '>=3.10'
+- pypi: https://files.pythonhosted.org/packages/49/14/74ee9e3b69f1bc18a1ab05b262062d10dc3d282cedbe7b3ebd6f56fb0936/sudachidict_core-20260428-py3-none-any.whl
+  name: sudachidict-core
+  version: '20260428'
+  sha256: 9cbd237eac62cb6e3347aa3ccff9e78b18298d629c4fc4295ed46817ff9df193
+  requires_dist:
+  - sudachipy>=0.5,<0.7
+- pypi: https://files.pythonhosted.org/packages/49/ee/f7c20d6e17619c83f5ffa3ed7bd1582174809fd8b396fb9250f24210dd57/sudachipy-0.6.11-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.whl
+  name: sudachipy
+  version: 0.6.11
+  sha256: 9d024efea4ff8b5bd0709f1afbb8e8f230ebd4ec83f9cd76f47b0542b7c22e91
+  requires_dist:
+  - tokenizers ; extra == 'tests'
+  - sudachidict-core ; extra == 'tests'
 - pypi: https://files.pythonhosted.org/packages/4b/f8/d0118a2f5f23b02cd166fa385c60f9b0d4f9194f574e2b31cef350ad7223/charset_normalizer-3.4.7-cp312-cp312-manylinux2014_x86_64.manylinux_2_17_x86_64.manylinux_2_28_x86_64.whl
   name: charset-normalizer
   version: 3.4.7

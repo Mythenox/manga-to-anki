@@ -7,7 +7,8 @@ deck will be ignored to avoid redundancy."""
 #TODO: use coroutines?
 
 import cv2
-from pytoken import tokenize_text
+from sudachipy import tokenizer
+from word import tokenize
 from create_vocab import create_vocab
 from process_page import get_bubble_text
 
@@ -17,12 +18,13 @@ def main():
     images = [f"sample/yfnu7-7({i}).png" for i in range(13)]
     text_list: list[str] = get_bubble_text(images)
     tokens = set()
+    mode = tokenizer.Tokenizer.SplitMode.C
     for dialogue in text_list:
-        dialogue_tokens = tokenize_text(dialogue, {token.base_form for token in tokens})
+        dialogue_tokens = tokenize(dialogue, mode)
         tokens.update(dialogue_tokens)
     # tokens = tokenize_text(text)
     for token in tokens:
-        vocab = create_vocab(token, kanji_mode=True)
+        vocab = create_vocab(token, kanji_mode=False)
         if vocab:
             print(vocab)
     
