@@ -2,11 +2,12 @@
 # TODO: use parts of speech to add appropriate tags for anki (na-adjective, i-adjective, etc)
 
 #TODO: Fix deinflect and use it
-#      Store words in deinflected form (probably use @cached_property?) 
+#      Store words in deinflected form (probably use @cached_property?)
+#TODO: from process_page import get_bubble_text <-- this import slows down the program significantly, even if the function isn't used. ????
 
 from typing import Union, Optional, List, Literal, Tuple
 from sudachipy import tokenizer, dictionary, Morpheme, SplitMode, MorphemeList
-from process_page import get_bubble_text
+
 from constants import KATAKANA_TO_HIRAGANA, KATAKANA, FILLER
 
 """
@@ -118,7 +119,7 @@ def tokenize_text(excerpt: str, seen_words: set[str] = set()) -> set[PyToken]:
             seen_words.add(token.base_form)
     return deinflect_tokens(py_tokens)
 """
- 
+"""
 def deinflect_tokens(tokens: set[PyToken]) -> set[PyToken]:
     return {
         retokenize(token)
@@ -126,6 +127,6 @@ def deinflect_tokens(tokens: set[PyToken]) -> set[PyToken]:
         else token
         for token in tokens
     }
-
+"""
 if __name__ == "__main__":
     main()
