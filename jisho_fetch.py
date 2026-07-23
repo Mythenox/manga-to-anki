@@ -19,7 +19,7 @@ def get_html(url: str) -> str | None:
     soup = BeautifulSoup(page_html, 'html.parser')
     result = soup.find("div", id="result_area")
     if isinstance(result, Tag):
-        if len(result.contents) == 1:
+        if result.find("div", id="no-matches"):
             return None
     return page_html
 

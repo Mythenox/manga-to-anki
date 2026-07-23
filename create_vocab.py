@@ -6,6 +6,8 @@ from constants import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA, KANJI
 from infer import infer_reading
 
 # filter out vocab with jlpt_rating < jlpt_filter if "n{i}" passed from command line, where i in {1,2,3,4}
+# check whether the verb is inflected or not, use normalized form if it is
+# if the verb was originally given given in all kana, keep it this way
 
 class Tango:
     def __init__(

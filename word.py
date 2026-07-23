@@ -14,6 +14,10 @@ from constants import KATAKANA_TO_HIRAGANA, KATAKANA, FILLER
 Strings that can be parsed as SplitMode
 """
 SplitModeStr = Literal["A", "a", "B", "b", "C", "c"]
+
+"""
+L1, L2, L3, L4, conjugation type, conjugation form
+"""
 POS = Tuple[str, str, str, str, str, str]
 
 def main():
@@ -47,26 +51,22 @@ class Word:
         self.reading_form: str = morpheme.reading_form()
         self.excerpt: str = excerpt
 
-        #m.surface()
-        #m.l1, m.l2, m.l3, m.l4, = m.part_of_speech()[:5]
-        #m.dictionary_form()
-        #m.reading_form()
-        #m.excerpt
-    
     def is_vocab(self) -> bool:
         """Returns true for nouns
         (exluding names of places (except countries) and people),
         adjectives and verbs."""
         if self.part_of_speech[0] == "名詞":
             # return false if name of location (except for countries)
-            if self.part_of_speech[2] == "地域":
+            if self.part_of_speech[2] == "地名":
                 return self.part_of_speech[3] == "国"
             # otherwise, return false if name of a person, true for every other noun
             return self.part_of_speech[2] != "人名"
         else:
             return (
                 self.part_of_speech[0] == "動詞" or
-                self.part_of_speech[0] == "副詞"
+                self.part_of_speech[0] == "副詞" or
+                self.part_of_speech[0] == "形容詞" or
+                self.part_of_speech[0] == "形状詞"
             )
 
     @property
@@ -104,29 +104,6 @@ def tokenize(
     morphemes = tokenizer_obj.tokenize(text, mode)
     return [Word(morpheme, text) for morpheme in morphemes]
 
-"""
-def tokenize_text(excerpt: str, seen_words: set[str] = set()) -> set[PyToken]:
-    tokenizer = JTokenizer()
-    j_tokens = tokenizer.tokenize(excerpt)
-    py_tokens: set[PyToken] = set()
-    for j_token in j_tokens:
-        token = PyToken(j_token, excerpt)
-        if (
-            token.base_form not in seen_words and
-            token.surface not in FILLER
-        ):
-            py_tokens.add(token)
-            seen_words.add(token.base_form)
-    return deinflect_tokens(py_tokens)
-"""
-"""
-def deinflect_tokens(tokens: set[PyToken]) -> set[PyToken]:
-    return {
-        retokenize(token)
-        if token.base_form != token.surface
-        else token
-        for token in tokens
-    }
-"""
+
 if __name__ == "__main__":
     main()

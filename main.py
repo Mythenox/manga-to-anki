@@ -10,13 +10,15 @@ import cv2
 from sudachipy import tokenizer
 from word import tokenize
 from create_vocab import create_vocab
-from process_page import get_bubble_text
+# from process_page import get_bubble_text
 
 def main():
     # text = "そもそもどうしてそんな結論になったの？"
     # text = "自分で持続ですか？って聞いてたから大丈夫だと思うけど"
-    images = [f"sample/yfnu7-7({i}).png" for i in range(13)]
-    text_list: list[str] = get_bubble_text(images)
+    # images = [f"sample/yfnu7-7({i}).png" for i in range(13)]
+    # text_list: list[str] = get_bubble_text(images)
+    
+    text_list = ["そこには、おぞましい光景が広がっていた"]
     tokens = set()
     mode = tokenizer.Tokenizer.SplitMode.C
     for dialogue in text_list:
