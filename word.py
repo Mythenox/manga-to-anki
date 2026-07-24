@@ -48,7 +48,7 @@ class Word:
         self.part_of_speech: POS = morpheme.part_of_speech()
         self.normalized_form: str = morpheme.normalized_form()
         self.dictionary_form: str = morpheme.dictionary_form()
-        self.reading_form: str = morpheme.reading_form()
+        self.reading_form: str = to_hiragana(morpheme.reading_form())
         self.excerpt: str = excerpt
 
     def is_vocab(self) -> bool:
@@ -79,7 +79,41 @@ class Word:
             return "adverb"
         elif self.part_of_speech[0] == "形状詞":
             return "na-adjective"
-        return "i-adjective"
+        elif self.part_of_speech[0] == "形容詞":
+            return "i-adjective"
+        return "auxilliary verb"
+
+    @property
+    def deinflected_reading_form(self) -> str:
+        # only types being passed to this method are verbs and i-adjectives
+        kana_reading = self.reading_form
+        uninflected_part: str = kana_reading
+        if self.eng_POS == "verb":
+            if self.part_of_speech[-1] == "未然形-一般":
+                # form will be ~[か,ら,た,さ,ま,わ,な]
+                uninflected_part = kana_reading[:-1]
+                return uninflected_part + self.dictionary_form[-1]
+            for i in range(len(kana_reading)):
+                if kana_reading[i] == "っ":
+                    uninflected_part = kana_reading[:i]
+
+            for i in range(len(self.surface)):
+                if self.surface[i] != self.dictionary_form[i]:
+                    return uninflected_part + self.dictionary_form[i:]
+            return uninflected_part + self.dictionary_form[-1] 
+        # otherwise is i-adjective
+        if self.part_of_speech[-1] == "連用形-促音便":
+            # form will be ~かっ
+            uninflected_part: str = kana_reading[:-2]
+        elif self.part_of_speech[-1] == "連用形-一般":
+            # form will be ~く
+            uninflected_part: str = kana_reading[:-1]
+        return uninflected_part + "い"
+            
+    @property
+    def can_inflect(self) -> bool:
+        inflectables: set[str] = {"verb", "i-adjective"}
+        return self.eng_POS in inflectables
     
     def __repr__(self) -> str:
         return (
@@ -104,6 +138,12 @@ def tokenize(
     morphemes = tokenizer_obj.tokenize(text, mode)
     return [Word(morpheme, text) for morpheme in morphemes]
 
+def is_inflected(m: Morpheme) -> bool:
+    conjugation_form: str = m.part_of_speech()[-1].split("-")[0]
+    return conjugation_form != "連体形"
+
+def to_hiragana(reading: str) -> str:
+    return "".join(KATAKANA_TO_HIRAGANA[ch] if ch in KATAKANA else ch for ch in reading)
 
 if __name__ == "__main__":
     main()

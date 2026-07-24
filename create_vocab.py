@@ -1,7 +1,7 @@
 from functools import cached_property
 from jisho_fetch import *
 from sudachipy import tokenizer, dictionary
-from word import Word
+from word import Word, to_hiragana
 from constants import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA, KANJI
 from infer import infer_reading
 
@@ -112,9 +112,16 @@ def create_vocab(
             return None
         return kanji_list
     if token.is_vocab():
+        if token.can_inflect and token.surface != token.dictionary_form:
+            return Tango(
+                token.dictionary_form,
+                token.deinflected_reading_form,
+                token.excerpt,
+                token.eng_POS
+            )
         return Tango(
-            token.normalized_form,
-            to_hiragana(token.reading_form),
+            token.dictionary_form,
+            token.reading_form,
             token.excerpt,
             token.eng_POS
         )
@@ -125,6 +132,3 @@ def is_kango(word: str) -> bool:
         if character not in KANJI:
             return False
     return True
-
-def to_hiragana(reading: str) -> str:
-    return "".join(KATAKANA_TO_HIRAGANA[ch] if ch in KATAKANA else ch for ch in reading)
