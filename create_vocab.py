@@ -6,8 +6,6 @@ from constants import HIRAGANA, KATAKANA, KATAKANA_TO_HIRAGANA, KANJI
 from infer import infer_reading
 
 # filter out vocab with jlpt_rating < jlpt_filter if "n{i}" passed from command line, where i in {1,2,3,4}
-# check whether the verb is inflected or not, use normalized form if it is
-# if the verb was originally given given in all kana, keep it this way
 
 class Tango:
     def __init__(
@@ -103,11 +101,30 @@ def create_vocab(
     # run in kanji mode if "-k" passed from command line
     # can return a single Tango, list of Kanji, empty list, or None
     if kanji_mode:
-        kanji_list: list[Kanji] = [
-            Kanji(character, token.surface, token.reading_form, token.excerpt, token.surface.index(character))
-            for character in token.surface
-            if character in KANJI
-        ]
+        if token.can_inflect and token.surface != token.dictionary_form:
+            kanji_list: list[Kanji] = [
+                Kanji(
+                    character,
+                    token.dictionary_form,
+                    token.deinflected_reading_form,
+                    token.excerpt,
+                    token.surface.index(character)
+                )
+                for character in token.surface
+                if character in KANJI
+            ]
+        else:
+            kanji_list: list[Kanji] = [
+                Kanji(
+                    character,
+                    token.surface,
+                    token.reading_form,
+                    token.excerpt,
+                    token.surface.index(character)
+                )
+                for character in token.surface
+                if character in KANJI
+            ]
         if len(kanji_list) == 0:
             return None
         return kanji_list

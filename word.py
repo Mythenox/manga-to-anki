@@ -89,10 +89,14 @@ class Word:
         kana_reading = self.reading_form
         uninflected_part: str = kana_reading
         if self.eng_POS == "verb":
-            if self.part_of_speech[-1] == "未然形-一般":
-                # form will be ~[か,ら,た,さ,ま,わ,な]
+            if (
+                "未然形" in self.part_of_speech[-1] or
+                ("連用形" in self.part_of_speech[-1] and "五段" in self.part_of_speech[-2])
+            ) :
+                # form will be ~[か,ら,た,さ,ま,わ,な] or ~[き,り,ち,し,み,い,に]
                 uninflected_part = kana_reading[:-1]
                 return uninflected_part + self.dictionary_form[-1]
+
             for i in range(len(kana_reading)):
                 if kana_reading[i] == "っ":
                     uninflected_part = kana_reading[:i]
@@ -102,13 +106,15 @@ class Word:
                     return uninflected_part + self.dictionary_form[i:]
             return uninflected_part + self.dictionary_form[-1] 
         # otherwise is i-adjective
-        if self.part_of_speech[-1] == "連用形-促音便":
-            # form will be ~かっ
-            uninflected_part: str = kana_reading[:-2]
-        elif self.part_of_speech[-1] == "連用形-一般":
-            # form will be ~く
-            uninflected_part: str = kana_reading[:-1]
-        return uninflected_part + "い"
+        elif self.eng_POS == "i-adjective":
+            if self.part_of_speech[-1] == "連用形-促音便":
+                # form will be ~かっ
+                uninflected_part: str = kana_reading[:-2]
+            elif self.part_of_speech[-1] == "連用形-一般":
+                # form will be ~く
+                uninflected_part: str = kana_reading[:-1]
+            return uninflected_part + "い"
+        return self.reading_form
             
     @property
     def can_inflect(self) -> bool:
